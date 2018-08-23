@@ -1,0 +1,95 @@
+from cryptography.fernet import Fernet
+import getpass
+import os
+import subprocess
+import shutil
+import sys
+import noted_normal_mode
+
+
+import noted_decrypt
+
+username = getpass.getuser()
+saved_notes_location = (f"/home/{username}/.noted/saved_notes")
+note_selection = ("")
+
+
+def get_editor():
+    found_editor = False
+
+    possible_editors = ('vim', 'vi', 'subl', 'nano')
+
+    for e in possible_editors:
+        try:
+            subprocess.check_call(['which', e])
+        except subprocess.CalledProcessError as exec:
+            continue
+        print("Using {} as the editor".format(e))
+        found_editor = True
+        editor = e
+        break
+
+    if editor.endswith('subl'):
+        editor += ' --wait'
+
+    if found_editor == True:
+        run_editor = subprocess.run(f"{editor} /tmp/.noted/notes/{note_selection}/{note_selection}.txt",
+        shell=True)
+
+        with open(f"/tmp/.noted/notes/{note_selection}/{note_selection}.txt") as edited_file:
+            edited_file = edited_file.read()
+
+        newfile_encryption_key0 = Fernet.generate_key()
+        newfile_encryption_key1 = Fernet(newfile_encryption_key0)
+        newfile_encryption_txt = newfile_encryption_key1.encrypt(bytes(f"{edited_file}", "utf-8"))
+        shutil.rmtree(f"{saved_notes_location}/{note_selection}")
+        os.makedirs(f"{saved_notes_location}/{note_selection}")
+        
+        with open(f"{saved_notes_location}/{note_selection}/file_txt.txt", "wb") as file_object:
+            file_object.write(newfile_encryption_txt)
+        with open(f"{saved_notes_location}/{note_selection}/file_key.txt", "wb") as file_object:
+            file_object.write(newfile_encryption_key0)
+
+        print("\033[2J")
+        print("\033[0;0H")
+        print("Successfully edited!")
+        noted_normal_mode.main()
+
+    else:
+        print("Did not find any 3rd-party editor to use! Please install vi, vim or set a enviroment variable to use your favourite editor!")
+
+
+
+def main():
+    global note_selection
+    saved_notes_list = os.listdir(saved_notes_location)
+    if saved_notes_list: 
+        print("Your notes: ", ", ".join(saved_notes_list))
+        note_selection = input("Which note do you want to read/edit: ")
+
+        if note_selection in saved_notes_list:
+            noted_decrypt.main(note_selection)
+
+            ask_selection = input("[R]ead | [E]dit\nSelect option: ")
+
+            if ask_selection.lower() in ("[r]", "read", "r"):
+                print("\033[2J")
+                print("\033[0;0H")
+                with open(f"/tmp/.noted/notes/{note_selection}/{note_selection}.txt") as read_file:
+                    print("-- BEGINNING --\n", read_file.read(), "\n-- END --")
+                noted_normal_mode.main()
+                    
+
+            elif ask_selection.lower() in ("[e]", "edit", "e"):
+                get_editor()
+            else:
+                print("Error: Option not found!")
+                    
+
+        else:
+            print(f"--> The note \"{note_selection}\" does not exist!\n")
+            main()
+
+    else:
+        print("You do not have any saved notes!")
+        
