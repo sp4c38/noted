@@ -72,7 +72,7 @@ def main(str):
         print("Your notes: ", ", ".join(saved_notes_list))
     else:
         print("No notes!")
-    task_selection = input("[1] new note | [2] read/edit note | [3] delete note "
+    task_selection = input("[1] new note | [2] read/edit/save note | [3] delete note "
         "\n[4] list notes | [5] back \n")
 
     def create_note():
@@ -118,6 +118,7 @@ def main(str):
     elif task_selection in ("[5]", "5", "five"):
         print("\033[2J")
         print("\033[0;0H")
+        noted_project_mode.print_header()
         noted_project_mode.main()
     else:
         sys.exit(1)

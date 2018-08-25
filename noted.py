@@ -30,6 +30,7 @@ def main():
         elif mode_selection in ("[2]", "2", "two"):
             print("\033[2J")
             print("\033[0;0H")
+            noted_project_mode.print_header()
             noted_project_mode.main()
         elif mode_selection in ("[3]", "3", "three"):
             print("Bye!")

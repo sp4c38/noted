@@ -73,7 +73,7 @@ def main():
         print("Your notes: ", ", ".join(saved_notes_list))
     else:
         print("No notes!")
-    task_selection = input("[1] new note | [2] read/edit note| [3] delete note | [4] list notes | \n[5] back\n")
+    task_selection = input("[1] new note | [2] read/edit/save note| [3] delete note | [4] list notes | \n[5] back\n")
 
     def create_note():
             newnote_name = input("Name: ")
