@@ -68,6 +68,7 @@ def get_editor(newnote_name, project):
 def main(str):
     project = str
     saved_notes_list = os.listdir(f"{saved_notes_location}{project}")
+    print("Current project: ", project)
     if saved_notes_list:
         print("Your notes: ", ", ".join(saved_notes_list))
     else:

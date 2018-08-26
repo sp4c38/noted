@@ -28,7 +28,7 @@ def create_project():
 def print_header():
     print("\033[2J")
     print("\033[0;0H")
-    print("-- Noted -- v.1.0 (unreleased/in development)\n")
+    print("-- Noted -- v.1.0 (beta)\n")
 
 def main():
     
@@ -78,7 +78,6 @@ def main():
                     if os.path.isdir(f"{projects_location}/{prj_selection}"):
                         print("\033[2J")
                         print("\033[0;0H")
-                        print("Working on: {}".format(prj_selection))
                         prj_workon.main(prj_selection)
                     else:
                         print("\033[2J")
