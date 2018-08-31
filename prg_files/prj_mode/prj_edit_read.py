@@ -50,7 +50,7 @@ def get_editor(project_selection):
         with open(f"{saved_notes_location}/{note_selection}/file_key.txt", "wb") as file_object:
             file_object.write(newfile_encryption_key0)
         with open(f"{saved_notes_location}/{note_selection}/metadata.txt", "w") as file_object:
-            file_object.write(f"\nLast time edited: {time_created}")
+            file_object.write(f"Last time edited: {time_created}")
 
         print("\033[2J")
         print("\033[0;0H")

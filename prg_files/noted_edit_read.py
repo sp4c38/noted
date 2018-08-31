@@ -1,4 +1,5 @@
 from cryptography.fernet import Fernet
+import datetime
 import getpass
 import os
 import subprocess
@@ -44,11 +45,14 @@ def get_editor():
         newfile_encryption_txt = newfile_encryption_key1.encrypt(bytes(f"{edited_file}", "utf-8"))
         shutil.rmtree(f"{saved_notes_location}/{note_selection}")
         os.makedirs(f"{saved_notes_location}/{note_selection}")
-        
+        time_created = datetime.datetime.now().strftime("%m %d %Y, %H:%M")
+
         with open(f"{saved_notes_location}/{note_selection}/file_txt.txt", "wb") as file_object:
             file_object.write(newfile_encryption_txt)
         with open(f"{saved_notes_location}/{note_selection}/file_key.txt", "wb") as file_object:
             file_object.write(newfile_encryption_key0)
+        with open(f"{saved_notes_location}/{note_selection}/metadata.txt", "w") as metadate_write:
+            metadate_write.write(f"Last time edited: {time_created}")
 
         print("\033[2J")
         print("\033[0;0H")
@@ -69,7 +73,8 @@ def main():
 
         if note_selection in saved_notes_list:
             noted_decrypt.main(note_selection)
-
+            with open(f"/home/{username}/.noted/saved_notes/{note_selection}/metadata.txt") as file_read:
+                print(file_read.read())
             ask_selection = input("[r]ead | [e]dit | [s]ave\nSelect option: ")
 
             if ask_selection.lower() in ("[r]", "read", "r"):

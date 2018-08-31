@@ -53,12 +53,14 @@ def get_editor(newnote_name, project):
         newfile_encryption_txt = newfile_encryption_key1.encrypt(bytes(f"{edited_file}", "utf-8"))
         os.makedirs(f"{saved_notes_location}{newnote_name}")
         time_created = datetime.datetime.now().strftime("%m %d %Y, %H:%M")
+
         with open(f"{saved_notes_location}{newnote_name}/file_txt.txt", "wb") as file_object:
             file_object.write(newfile_encryption_txt)
         with open(f"{saved_notes_location}{newnote_name}/file_key.txt", "wb") as file_object:
             file_object.write(newfile_encryption_key0)
         with open (f"{saved_notes_location}{newnote_name}/metadata.txt", "w") as file_object:
-            file_object.write(time_created)
+            file_object.write(f"Created on: {time_created}")
+
         print("Note was created!")
         main(project)
     else:

@@ -55,7 +55,7 @@ def get_editor(newnote_name):
         newfile_encryption_key1 = Fernet(newfile_encryption_key0)
         newfile_encryption_txt = newfile_encryption_key1.encrypt(bytes(f"{edited_file}", "utf-8"))
         os.makedirs(f"{saved_notes_location}{newnote_name}")
-        time_created = datetime.datetime.now().strftime("%m %d %Y, %H:%M")
+        time_created = datetime.datetime.now().strftime("Created on: %m %d %Y, %H:%M")
         with open(f"{saved_notes_location}{newnote_name}/file_txt.txt", "wb") as file_object:
             file_object.write(newfile_encryption_txt)
         with open(f"{saved_notes_location}{newnote_name}/file_key.txt", "wb") as file_object:
