@@ -1,10 +1,12 @@
-import os
 import getpass
+import os
 import shutil
 import sys
-sys.path.append('prg_files/prj_mode')
-import prj_workon
+
 import noted
+
+from .prj_mode import prj_workon
+
 
 username = getpass.getuser()
 projects_location = (f"/home/{username}/.noted/projects/")

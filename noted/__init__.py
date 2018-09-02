@@ -1,24 +1,25 @@
+"""
+The root module of the famous noted Python programm.
+"""
 import getpass
 import os
 import shutil
 import sys
-from cryptography.fernet import Fernet
 
-
-username = getpass.getuser()
+__version__ = '0.1.0'
+__authors__ = ('Léon Becker <lb@space8.me')
 
 
 def main():
+    username = getpass.getuser()
     if os.path.isdir("/home/{}/.noted/saved_notes".format(username)):
-        sys.path.append('prg_files/')
         
-        import noted_edit_read
-        import noted_decrypt
-        import noted_delete 
-        import noted_normal_mode
-        import noted_project_mode
-        sys.path.append('prg_files/prj_mode')
-        import prj_workon
+        from noted import noted_edit_read
+        from noted import noted_decrypt
+        from noted import noted_delete 
+        from noted import noted_normal_mode
+        from noted import noted_project_mode
+        from noted.prj_mode import prj_workon
 
         mode_selection = input("[1] normale mode [2] project mode [3] exit\n")
         if mode_selection in ("[1]", "1", "one"):
@@ -38,6 +39,3 @@ def main():
     else:
         os.makedirs("/home/{}/.noted/saved_notes".format(username))
         main()
-
-if __name__ == '__main__':
-    main()

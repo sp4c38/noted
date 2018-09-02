@@ -5,10 +5,10 @@ import os
 import subprocess
 import shutil
 import sys
-import noted_normal_mode
+import tempfile
 
-
-import noted_decrypt
+from . import noted_normal_mode
+from . import noted_decrypt
 
 username = getpass.getuser()
 saved_notes_location = (f"/home/{username}/.noted/saved_notes")
@@ -16,51 +16,55 @@ note_selection = ("")
 
 
 def get_editor():
-    found_editor = False
 
-    possible_editors = ('vim', 'vi', 'subl', 'nano')
+    with tempfile.TemporaryDirectory() as tempdir:
 
-    for e in possible_editors:
-        try:
-            subprocess.check_call(['which', e])
-        except subprocess.CalledProcessError as exec:
-            continue
-        print("Using {} as the editor".format(e))
-        found_editor = True
-        editor = e
-        break
+        temp_file = tempfile.NamedTemporaryFile(dir=f'{tempdir}/', prefix='noted_')
+        noted_decrypt.main(note_selection=note_selection, temp_file=temp_file)
+        found_editor = False
 
-    if editor.endswith('subl'):
-        editor += ' --wait'
+        possible_editors = ('vim', 'vi', 'subl', 'nano')
 
-    if found_editor == True:
-        run_editor = subprocess.run(f"{editor} /tmp/.noted/notes/{note_selection}/{note_selection}.txt",
-        shell=True)
+        for e in possible_editors:
+            try:
+                subprocess.check_call(['which', e])
+            except subprocess.CalledProcessError as exec:
+                continue
+            print("Using {} as the editor".format(e))
+            found_editor = True
+            editor = e
+            break
 
-        with open(f"/tmp/.noted/notes/{note_selection}/{note_selection}.txt") as edited_file:
-            edited_file = edited_file.read()
+        if editor.endswith('subl'):
+            editor += ' --wait'
 
-        newfile_encryption_key0 = Fernet.generate_key()
-        newfile_encryption_key1 = Fernet(newfile_encryption_key0)
-        newfile_encryption_txt = newfile_encryption_key1.encrypt(bytes(f"{edited_file}", "utf-8"))
-        shutil.rmtree(f"{saved_notes_location}/{note_selection}")
-        os.makedirs(f"{saved_notes_location}/{note_selection}")
-        time_created = datetime.datetime.now().strftime("%m %d %Y, %H:%M")
+        if found_editor == True:
+            run_editor = subprocess.run(f"{editor} {temp_file.name}", shell=True)
 
-        with open(f"{saved_notes_location}/{note_selection}/file_txt.txt", "wb") as file_object:
-            file_object.write(newfile_encryption_txt)
-        with open(f"{saved_notes_location}/{note_selection}/file_key.txt", "wb") as file_object:
-            file_object.write(newfile_encryption_key0)
-        with open(f"{saved_notes_location}/{note_selection}/metadata.txt", "w") as metadate_write:
-            metadate_write.write(f"Last time edited: {time_created}")
+            with open(f"{temp_file.name}") as edited_file:
+                edited_file = edited_file.read()
 
-        print("\033[2J")
-        print("\033[0;0H")
-        print("Successfully edited!")
-        noted_normal_mode.main()
+            newfile_encryption_key0 = Fernet.generate_key()
+            newfile_encryption_key1 = Fernet(newfile_encryption_key0)
+            newfile_encryption_txt = newfile_encryption_key1.encrypt(bytes(f"{edited_file}", "utf-8"))
+            shutil.rmtree(f"{saved_notes_location}/{note_selection}")
+            os.makedirs(f"{saved_notes_location}/{note_selection}")
+            time_created = datetime.datetime.now().strftime("%m %d %Y, %H:%M")
 
-    else:
-        print("Did not find any 3rd-party editor to use! Please install vi, vim or set a enviroment variable to use your favourite editor!")
+            with open(f"{saved_notes_location}/{note_selection}/file_txt.txt", "wb") as file_object:
+                file_object.write(newfile_encryption_txt)
+            with open(f"{saved_notes_location}/{note_selection}/file_key.txt", "wb") as file_object:
+                file_object.write(newfile_encryption_key0)
+            with open(f"{saved_notes_location}/{note_selection}/metadata.txt", "w") as metadate_write:
+                metadate_write.write(f"Last time edited: {time_created}")
+
+            print("\033[2J")
+            print("\033[0;0H")
+            print("Successfully edited!")
+            noted_normal_mode.main()
+
+        else:
+            print("Did not find any editor! Please install vi, vim, subl (SublimeText) or nano")
 
 
 
@@ -72,17 +76,21 @@ def main():
         note_selection = input("Which note do you want to read/edit/save: ")
 
         if note_selection in saved_notes_list:
-            noted_decrypt.main(note_selection)
-            with open(f"/home/{username}/.noted/saved_notes/{note_selection}/metadata.txt") as file_read:
-                print(file_read.read())
+            
             ask_selection = input("[r]ead | [e]dit | [s]ave\nSelect option: ")
 
             if ask_selection.lower() in ("[r]", "read", "r"):
                 print("\033[2J")
                 print("\033[0;0H")
-                with open(f"/tmp/.noted/notes/{note_selection}/{note_selection}.txt") as read_file:
-                    print("-- BEGINNING --\n", read_file.read(), "\n-- END --")
-                noted_normal_mode.main()
+                with open(f"/home/{username}/.noted/saved_notes/{note_selection}/metadata.txt") as file_read:
+                    print(file_read.read())
+
+                with tempfile.TemporaryDirectory() as tempdir:
+                    temp_file = tempfile.NamedTemporaryFile(dir=f'{tempdir}/', prefix='noted_')
+                    noted_decrypt.main(note_selection=note_selection, temp_file=temp_file)
+                    with open(f"/tmp/.noted/notes/{note_selection}/{note_selection}.txt") as read_file:
+                        print("\n-- BEGINNING --\n", read_file.read(), "-- END --\n")
+                    noted_normal_mode.main()
                     
 
             elif ask_selection.lower() in ("[e]", "edit", "e"):

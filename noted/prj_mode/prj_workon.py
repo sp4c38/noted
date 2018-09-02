@@ -7,10 +7,10 @@ import shutil
 import sys
 from cryptography.fernet import Fernet
 
-import noted_project_mode
-import prj_delete
-import prj_workon
-import prj_edit_read
+from .. import noted_project_mode
+from . import prj_delete
+from . import prj_workon
+from . import prj_edit_read
 
 
 username = getpass.getuser()
@@ -25,14 +25,8 @@ def print_header():
 
 def get_editor(newnote_name=None, project=None):
     with tempfile.TemporaryDirectory() as tempdir:
-        if os.path.exists(f"{tempdir}/.noted/projects/{project}/{newnote_name}"):
-            with open(f"{tempdir}/.noted/projects/{project}/{newnote_name}/{newnote_name}.txt", "w") as file_object:
-                file_object.write("")
-                get_editor(newnote_name=newnote_name, project=project, tempdir=tempdir)
-        else:
-            os.makedirs(f"{tempdir}/.noted/projects/{project}/{newnote_name}/")
-            with open(f"{tempdir}/.noted/projects/{project}/{newnote_name}/{newnote_name}.txt", "w") as file_object:
-                file_object.write("")
+
+        temp_file = tempfile.NamedTemporaryFile(dir=f'{tempdir}/', prefix='noted_')
         
         found_editor = False
         saved_notes_location = (f"/home/{username}/.noted/projects/{project}/")
@@ -53,10 +47,9 @@ def get_editor(newnote_name=None, project=None):
             editor += ' --wait'
 
         if found_editor == True:
-            run_editor = subprocess.run(f"{editor} {tempdir}/.noted/projects/{project}/{newnote_name}/{newnote_name}.txt",
-            shell=True)
+            run_editor = subprocess.run(f"{editor} {temp_file.name}", shell=True)
     
-            with open(f"{tempdir}/.noted/projects/{project}/{newnote_name}/{newnote_name}.txt") as edited_file:
+            with open(f"{temp_file.name}") as edited_file:
                 edited_file = edited_file.read()
 
             newfile_encryption_key0 = Fernet.generate_key()
@@ -91,7 +84,7 @@ def main(project=None):
     def create_note():
             newnote_name = input("Name: ")
             if ' ' in newnote_name:
-                print("The note name can not contain any spaces!")
+                print("The note name can't contain any spaces!")
                 create_note()
 
             if os.path.exists(f"/home/{username}/.noted/projects/{project}/{newnote_name}"):

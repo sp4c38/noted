@@ -7,8 +7,7 @@ from cryptography.fernet import Fernet
 
 username = getpass.getuser()
 
-def main(note_selection_decrypt=None, project_selection=None, tempdir=None, temp_file=None):
-    print(tempdir)
+def main(note_selection_decrypt=None, project_selection=None, temp_file=None):
     saved_notes_location = (f"/home/{username}/.noted/projects")
     with open(f"{saved_notes_location}/{project_selection}/{note_selection_decrypt}/file_txt.txt", "rb") as readfile_txt:
         readfile_txt = readfile_txt.read()

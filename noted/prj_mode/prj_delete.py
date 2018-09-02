@@ -2,7 +2,7 @@ import os
 import shutil
 import getpass
 
-import prj_workon
+from . import prj_workon
 
 username = getpass.getuser()
 

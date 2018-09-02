@@ -1,7 +1,8 @@
 import os
 import shutil
-import noted_normal_mode
 import getpass
+
+from . import noted_normal_mode
 
 username = getpass.getuser()
 saved_notes_location = (f"/home/{username}/.noted/saved_notes")

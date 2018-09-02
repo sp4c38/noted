@@ -7,10 +7,9 @@ import sys
 from cryptography.fernet import Fernet
 
 import noted
-sys.path.append('prg_files/')
-import noted_edit_read
-import noted_decrypt
-import noted_delete
+from . import noted_edit_read
+from . import noted_decrypt
+from . import noted_delete
 
 
 username = getpass.getuser()

@@ -6,8 +6,9 @@ import os
 import subprocess
 import shutil
 import sys
-import prj_workon
-import prj_decrypt
+
+from . import prj_workon
+from . import prj_decrypt
 
 
 username = getpass.getuser()
@@ -21,13 +22,8 @@ def get_editor(project_selection=None, note_selection=None):
 
         temp_file = tempfile.NamedTemporaryFile(dir=f'{tempdir}/', prefix='noted_')
         prj_decrypt.main(note_selection_decrypt=note_selection, project_selection=project_selection, 
-            tempdir=tempdir, temp_file=temp_file)
-        
+            temp_file=temp_file)
 
-        # if os.path.exists(f"{tempdir}"):
-        #     pass
-        # else:    
-        #     os.makedirs(f"{tempdir}")
 
         found_editor = False
         saved_notes_location = (f"/home/{username}/.noted/projects/{project_selection}")
@@ -75,7 +71,7 @@ def get_editor(project_selection=None, note_selection=None):
             prj_workon.main(project_selection)
 
         else:
-            print("Did not find any 3rd-party editor to use! Please install vi, vim or set a enviroment variable to use your favourite editor!")
+            print("Did not find any editor! Please install vi, vim, subl (SublimeText) or nano")
 
 
 
@@ -99,8 +95,10 @@ def main(project=None):
                 with open(f"/home/{username}/.noted/projects/{project}/{note_selection}/metadata.txt") as read_file:
                     print(read_file.read())
                 with tempfile.TemporaryDirectory() as tempdir:
-                    prj_decrypt.main(note_selection_decrypt=note_selection, project_selection=project, tempdir=tempdir)
-                    with open(f"{tempdir}/.noted/projects/{project}/{note_selection}/{note_selection}.txt") as read_file:
+                    temp_file = tempfile.NamedTemporaryFile(dir=f'{tempdir}/', prefix='noted_')
+                    prj_decrypt.main(note_selection_decrypt=note_selection, project_selection=project, 
+                        temp_file=temp_file)
+                    with open(f"{temp_file.name}") as read_file:
                         print("\n-- BEGINNING --\n", read_file.read(), "-- END --\n")
                     prj_workon.main(project)
                     
