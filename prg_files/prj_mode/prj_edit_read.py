@@ -9,6 +9,7 @@ import sys
 import prj_workon
 import prj_decrypt
 
+
 username = getpass.getuser()
 note_selection = ("")
 
@@ -17,11 +18,17 @@ note_selection = ("")
 def get_editor(project_selection=None, note_selection=None):
 
     with tempfile.TemporaryDirectory() as tempdir:
-        prj_decrypt.main(note_selection_decrypt=note_selection, project_selection=project_selection, tempdir=tempdir)
-        if os.path.exists(f"{tempdir}/.noted/projects/{project_selection}/{note_selection}"):
-            pass
-        else:    
-            os.makedirs(f"{tempdir}/.noted/projects/{project_selection}/{note_selection}")
+
+        temp_file = tempfile.NamedTemporaryFile(dir=f'{tempdir}/', prefix='noted_')
+        prj_decrypt.main(note_selection_decrypt=note_selection, project_selection=project_selection, 
+            tempdir=tempdir, temp_file=temp_file)
+        
+
+        # if os.path.exists(f"{tempdir}"):
+        #     pass
+        # else:    
+        #     os.makedirs(f"{tempdir}")
+
         found_editor = False
         saved_notes_location = (f"/home/{username}/.noted/projects/{project_selection}")
 
@@ -41,10 +48,10 @@ def get_editor(project_selection=None, note_selection=None):
             editor += ' --wait'
 
         if found_editor == True:
-            run_editor = subprocess.run(f"{editor} {tempdir}/.noted/projects/{project_selection}/{note_selection}/{note_selection}.txt",
-            shell=True)
 
-            with open(f"{tempdir}/.noted/projects/{project_selection}/{note_selection}/{note_selection}.txt") as edited_file:
+            run_editor = subprocess.run(f"{editor} {temp_file.name}", shell=True)
+
+            with open(f"{temp_file.name}") as edited_file:
                edited_file = edited_file.read()
                print(edited_file)
 
