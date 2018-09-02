@@ -1,5 +1,6 @@
 import datetime
 import getpass
+import tempfile
 import os
 import subprocess
 import shutil
@@ -22,53 +23,62 @@ def print_header():
     print("\033[0;0H")
     print("-- Noted -- v.1.0 (beta)\n")
 
-def get_editor(newnote_name, project):
-    found_editor = False
-    saved_notes_location = (f"/home/{username}/.noted/projects/{project}/")
+def get_editor(newnote_name=None, project=None):
+    with tempfile.TemporaryDirectory() as tempdir:
+        if os.path.exists(f"{tempdir}/.noted/projects/{project}/{newnote_name}"):
+            with open(f"{tempdir}/.noted/projects/{project}/{newnote_name}/{newnote_name}.txt", "w") as file_object:
+                file_object.write("")
+                get_editor(newnote_name=newnote_name, project=project, tempdir=tempdir)
+        else:
+            os.makedirs(f"{tempdir}/.noted/projects/{project}/{newnote_name}/")
+            with open(f"{tempdir}/.noted/projects/{project}/{newnote_name}/{newnote_name}.txt", "w") as file_object:
+                file_object.write("")
+        
+        found_editor = False
+        saved_notes_location = (f"/home/{username}/.noted/projects/{project}/")
 
-    possible_editors = ('vim', 'vi', 'subl', 'nano')
+        possible_editors = ('vim', 'vi', 'subl', 'nano')
 
-    for e in possible_editors:
-        try:
-            subprocess.check_call(['which', e])
-        except subprocess.CalledProcessError as exec:
-            continue
-        print("Using {} as the editor".format(e))
-        found_editor = True
-        editor = e
-        break
+        for e in possible_editors:
+            try:
+                subprocess.check_call(['which', e])
+            except subprocess.CalledProcessError as exec:
+                continue
+            print("Using {} as the editor".format(e))
+            found_editor = True
+            editor = e
+            break
 
-    if editor.endswith('subl'):
-        editor += ' --wait'
+        if editor.endswith('subl'):
+            editor += ' --wait'
 
-    if found_editor == True:
-        run_editor = subprocess.run(f"{editor} /tmp/.noted/projects/{project}/{newnote_name}/{newnote_name}.txt",
-        shell=True)
+        if found_editor == True:
+            run_editor = subprocess.run(f"{editor} {tempdir}/.noted/projects/{project}/{newnote_name}/{newnote_name}.txt",
+            shell=True)
+    
+            with open(f"{tempdir}/.noted/projects/{project}/{newnote_name}/{newnote_name}.txt") as edited_file:
+                edited_file = edited_file.read()
 
-        with open(f"/tmp/.noted/projects/{project}/{newnote_name}/{newnote_name}.txt") as edited_file:
-            edited_file = edited_file.read()
-
-        newfile_encryption_key0 = Fernet.generate_key()
-        newfile_encryption_key1 = Fernet(newfile_encryption_key0)
-        newfile_encryption_txt = newfile_encryption_key1.encrypt(bytes(f"{edited_file}", "utf-8"))
-        os.makedirs(f"{saved_notes_location}{newnote_name}")
-        time_created = datetime.datetime.now().strftime("%m %d %Y, %H:%M")
-
-        with open(f"{saved_notes_location}{newnote_name}/file_txt.txt", "wb") as file_object:
-            file_object.write(newfile_encryption_txt)
-        with open(f"{saved_notes_location}{newnote_name}/file_key.txt", "wb") as file_object:
-            file_object.write(newfile_encryption_key0)
-        with open (f"{saved_notes_location}{newnote_name}/metadata.txt", "w") as file_object:
-            file_object.write(f"Created on: {time_created}")
-
-        print("Note was created!")
-        main(project)
-    else:
-        print("Did not find any 3rd-party editor to use! Please install vi, vim or set a enviroment variable to use your favourite editor!")
+            newfile_encryption_key0 = Fernet.generate_key()
+            newfile_encryption_key1 = Fernet(newfile_encryption_key0)
+            newfile_encryption_txt = newfile_encryption_key1.encrypt(bytes(f"{edited_file}", "utf-8"))
+            os.makedirs(f"{saved_notes_location}{newnote_name}")
+            time_created = datetime.datetime.now().strftime("%m %d %Y, %H:%M")
+    
+            with open(f"{saved_notes_location}{newnote_name}/file_txt.txt", "wb") as file_object:
+                file_object.write(newfile_encryption_txt)
+            with open(f"{saved_notes_location}{newnote_name}/file_key.txt", "wb") as file_object:
+                file_object.write(newfile_encryption_key0)
+            with open (f"{saved_notes_location}{newnote_name}/metadata.txt", "w") as file_object:
+                file_object.write(f"Created on: {time_created}")
+    
+            print("Note was created!")
+            main(project)
+        else:
+            print("Did not find any 3rd-party editor to use! Please install vi, vim or set a enviroment variable to use your favourite editor!")
 
 
-def main(str):
-    project = str
+def main(project=None):
     saved_notes_list = os.listdir(f"{saved_notes_location}{project}")
     print("Current project: ", project)
     if saved_notes_list:
@@ -88,15 +98,7 @@ def main(str):
                 print("This note name already exists!")
                 create_note()
             else:
-                if os.path.exists(f"/tmp/.noted/projects/{project}/{newnote_name}"):
-                    with open(f"/tmp/.noted/projects/{project}/{newnote_name}/{newnote_name}.txt", "w") as file_object:
-                        file_object.write("")
-                    get_editor(newnote_name=newnote_name, project=project)
-                else:
-                    os.makedirs(f"/tmp/.noted/projects/{project}/{newnote_name}")
-                    with open(f"/tmp/.noted/projects/{project}/{newnote_name}/{newnote_name}.txt", "w") as file_object:
-                        file_object.write("")
-                    get_editor(newnote_name=newnote_name, project=project)
+                get_editor(newnote_name=newnote_name, project=project)
 
     
     if task_selection in ("[1]", "1", "one"):
@@ -117,7 +119,7 @@ def main(str):
         prj_delete.main(project)
 
     elif task_selection in ("[2]", "2", "two"):
-        prj_edit_read.main(project)
+        prj_edit_read.main(project=project)
     elif task_selection in ("[5]", "5", "five"):
         print("\033[2J")
         print("\033[0;0H")

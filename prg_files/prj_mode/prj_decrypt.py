@@ -6,7 +6,7 @@ from cryptography.fernet import Fernet
 
 username = getpass.getuser()
 
-def main(note_selection_decrypt=None, project_selection=None):
+def main(note_selection_decrypt=None, project_selection=None, tempdir=None):
     saved_notes_location = (f"/home/{username}/.noted/projects")
     with open(f"{saved_notes_location}/{project_selection}/{note_selection_decrypt}/file_txt.txt", "rb") as readfile_txt:
         readfile_txt = readfile_txt.read()
@@ -18,8 +18,9 @@ def main(note_selection_decrypt=None, project_selection=None):
     decrypted_txt = (readfile_key.decrypt(readfile_txt))
     plaintext_decrypted_txt = bytes(decrypted_txt).decode("utf-8")
     
+
     note_selection_name = (f"{note_selection_decrypt}")
-    saved_notes_edit_location = (f"/tmp/.noted/projects/{project_selection}/{note_selection_name}")
+    saved_notes_edit_location = (f"{tempdir}/.noted/projects/{project_selection}/{note_selection_name}")
     saved_notes_edit_location_txt = (f"{saved_notes_edit_location}/{note_selection_name}.txt")
 
     if os.path.isdir(saved_notes_edit_location):
