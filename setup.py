@@ -10,7 +10,7 @@ setup(
     url='http://www.space8.me/noted',
     download_url='https://github.com/space8me/noted',
     license='LICENSE',
-    description='The coolest Note program in the Universe. Also, I am learning Python.',
+    description='Noted is a simple, secure and fun to use note program!',
     long_description=open('README.md').read(),
     install_requires=[
         "cryptography >= 2.0",

@@ -4,6 +4,7 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 from cryptography.fernet import Fernet
 
 import noted
@@ -25,46 +26,49 @@ def print_header():
 
 
 def get_editor(newnote_name):
-    found_editor = False
-    saved_notes_location = (f"/home/{username}/.noted/saved_notes/")
+    with tempfile.TemporaryDirectory() as tempdir:
+        temp_file = tempfile.NamedTemporaryFile(dir=f'{tempdir}/', prefix='noted_')
+        
+        found_editor = False
+        saved_notes_location = (f"/home/{username}/.noted/saved_notes/")
 
-    possible_editors = ('vim', 'vi', 'subl', 'nano')
+        possible_editors = ('vim', 'vi', 'subl', 'nano')
 
-    for e in possible_editors:
-        try:
-            subprocess.check_call(['which', e])
-        except subprocess.CalledProcessError as exec:
-            continue
-        print("Using {} as the editor".format(e))
-        found_editor = True
-        editor = e
-        break
+        for e in possible_editors:
+            try:
+                subprocess.check_call(['which', e])
+            except subprocess.CalledProcessError as exec:
+                continue
+            print("Using {} as the editor".format(e))
+            found_editor = True
+            editor = e
+            break
 
-    if editor.endswith('subl'):
-        editor += ' --wait'
+        if editor.endswith('subl'):
+            editor += ' --wait'
 
-    if found_editor == True:
-        run_editor = subprocess.run(f"{editor} /tmp/.noted/notes/{newnote_name}/{newnote_name}.txt",
-        shell=True)
+        if found_editor == True:
+            run_editor = subprocess.run(f"{editor} {temp_file.name}",
+            shell=True)
 
-        with open(f"/tmp/.noted/notes/{newnote_name}/{newnote_name}.txt") as edited_file:
-            edited_file = edited_file.read()
+            with open(temp_file.name) as edited_file:
+                edited_file = edited_file.read()
 
-        newfile_encryption_key0 = Fernet.generate_key()
-        newfile_encryption_key1 = Fernet(newfile_encryption_key0)
-        newfile_encryption_txt = newfile_encryption_key1.encrypt(bytes(f"{edited_file}", "utf-8"))
-        os.makedirs(f"{saved_notes_location}{newnote_name}")
-        time_created = datetime.datetime.now().strftime("Created on: %m %d %Y, %H:%M")
-        with open(f"{saved_notes_location}{newnote_name}/file_txt.txt", "wb") as file_object:
-            file_object.write(newfile_encryption_txt)
-        with open(f"{saved_notes_location}{newnote_name}/file_key.txt", "wb") as file_object:
-            file_object.write(newfile_encryption_key0)
-        with open (f"{saved_notes_location}{newnote_name}/metadata.txt", "w") as file_object:
-            file_object.write(time_created)
-        print("Note was created!")
-        main()
-    else:
-        print("Did not find any 3rd-party editor to use! Please install vi, vim or set a enviroment variable to use your favourite editor!")
+            newfile_encryption_key0 = Fernet.generate_key()
+            newfile_encryption_key1 = Fernet(newfile_encryption_key0)
+            newfile_encryption_txt = newfile_encryption_key1.encrypt(bytes(f"{edited_file}", "utf-8"))
+            os.makedirs(f"{saved_notes_location}{newnote_name}")
+            time_created = datetime.datetime.now().strftime("Created on: %m %d %Y, %H:%M")
+            with open(f"{saved_notes_location}{newnote_name}/file_txt.txt", "wb") as file_object:
+                file_object.write(newfile_encryption_txt)
+            with open(f"{saved_notes_location}{newnote_name}/file_key.txt", "wb") as file_object:
+                file_object.write(newfile_encryption_key0)
+            with open (f"{saved_notes_location}{newnote_name}/metadata.txt", "w") as file_object:
+                file_object.write(time_created)
+            print("Note was created!")
+            main()
+        else:
+            print("Did not find any 3rd-party editor to use! Please install vi, vim or set a enviroment variable to use your favourite editor!")
 
 def main():
     saved_notes_list = os.listdir(saved_notes_location)
@@ -84,15 +88,7 @@ def main():
                 print("This note name already exists!")
                 create_note()
             else:
-                if os.path.exists(f"/tmp/.noted/notes/{newnote_name}"):
-                    with open(f"/tmp/.noted/notes/{newnote_name}/{newnote_name}.txt", "w") as file_object:
-                        file_object.write("")
-                    get_editor(newnote_name=newnote_name)
-                else:
-                    os.makedirs(f"/tmp/.noted/notes/{newnote_name}")
-                    with open(f"/tmp/.noted/notes/{newnote_name}/{newnote_name}.txt", "w") as file_object:
-                        file_object.write("")
-                    get_editor(newnote_name=newnote_name)
+                get_editor(newnote_name=newnote_name)
                 
 
     

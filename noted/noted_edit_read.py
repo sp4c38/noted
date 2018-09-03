@@ -87,8 +87,9 @@ def main():
 
                 with tempfile.TemporaryDirectory() as tempdir:
                     temp_file = tempfile.NamedTemporaryFile(dir=f'{tempdir}/', prefix='noted_')
+                    
                     noted_decrypt.main(note_selection=note_selection, temp_file=temp_file)
-                    with open(f"/tmp/.noted/notes/{note_selection}/{note_selection}.txt") as read_file:
+                    with open(temp_file.name) as read_file:
                         print("\n-- BEGINNING --\n", read_file.read(), "-- END --\n")
                     noted_normal_mode.main()
                     
