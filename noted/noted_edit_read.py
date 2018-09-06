@@ -99,8 +99,11 @@ def main():
             elif ask_selection.lower() in ("[s]", "save", "s"):
                 save_path = input("Please specify where to save your note (e.g. /home/<username>/Downloads):\n")
                 if os.path.isdir(save_path):
-                    shutil.move(os.path.join(f"/tmp/.noted/notes/{note_selection}/{note_selection}.txt"),
-                        os.path.join(save_path, f"{note_selection}.txt"))
+                    with tempfile.TemporaryDirectory() as tempdir:
+                        temp_file = tempfile.NamedTemporaryFile(dir=f'{tempdir}/', prefix='noted_')
+                        noted_decrypt.main(note_selection=note_selection, temp_file=temp_file)
+                        shutil.move(os.path.join(temp_file.name),
+                            os.path.join(save_path, f"{note_selection}.txt"))
 
                     noted_normal_mode.print_header()
                     print(f"File: {note_selection}.txt, was successfully copied to {save_path}")

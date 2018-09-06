@@ -105,20 +105,21 @@ def main(project=None):
             elif ask_selection.lower() in ("[e]", "edit", "e"):
                 get_editor(project_selection=project, note_selection=note_selection)
             elif ask_selection.lower() in ("[s]", "save", "s"):
-                with tempfile.TemporaryDirectory() as tempdir:
-                    prj_decrypt.main(note_selection_decrypt=note_selection, project_selection=project, tempdir=tempdir)
-                    save_path = input("Please specify where to save your note (e.g. /home/<username>/Downloads):\n")
-                    if os.path.isdir(save_path):
-                        print(tempdir)
-                        shutil.move(os.path.join(f"{tempdir}/.noted/projects/{project}/{note_selection}/{note_selection}.txt"),
+                save_path = input("Please specify where to save your note (e.g. /home/<username>/Downloads):\n")
+                if os.path.isdir(save_path):
+                    with tempfile.TemporaryDirectory() as tempdir:
+                        temp_file = tempfile.NamedTemporaryFile(dir=f'{tempdir}/', prefix='noted_')
+                        prj_decrypt.main(note_selection_decrypt=note_selection, project_selection=project, temp_file=temp_file)
+                        
+                        shutil.move(os.path.join(temp_file.name),
                             os.path.join(save_path, f"{note_selection}.txt"))
 
                         prj_workon.print_header()
                         print(f"File: {note_selection}.txt, was successfully copied to {save_path}")
                         prj_workon.main(project)
-                    else:
-                        print("This path doesn't exist!")
-                        prj_workon(project)
+                else:
+                    print("This path doesn't exist!")
+                    prj_workon(project)
             else:
                 print("Error: Option not found!")
                     
